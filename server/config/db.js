@@ -19,15 +19,14 @@ const connectDB = async () => {
             logger.error(`MongoDB connection error: ${err}`);
         });
 
-        await mongoose.connect(process.env.MONGODB_URI, { // Remove the fallback to localhost
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-            serverSelectionTimeoutMS: 5000,
-            socketTimeoutMS: 45000,
-            maxPoolSize: 10,
-            retryWrites: true,
-            retryReads: true
-        });
+        await mongoose.connect(process.env.MONGODB_URI, {
+              useNewUrlParser: true,
+              useUnifiedTopology: true,
+              poolSize: 50, // Increase connection pool size
+              socketTimeoutMS: 30000, // 30 seconds
+              connectTimeoutMS: 30000,
+              serverSelectionTimeoutMS: 30000
+            });
         
         logger.info(`MongoDB Connected: ${mongoose.connection.host}`);
     } catch (error) {
