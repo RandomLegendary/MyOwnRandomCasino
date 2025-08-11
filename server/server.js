@@ -57,7 +57,7 @@ app.use(cors({
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 1000, // Increase from 100 to 1000 requests per window
+  max: 100000000000000, // Increase from 100 to 1000 requests per window
   message: 'Too many requests from this IP, please try again later',
   skip: (req) => {
     // Skip rate limiting for admin routes
