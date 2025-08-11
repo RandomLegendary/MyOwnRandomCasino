@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mines Gambling Game</title>
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <img src="./assets/images/logo.png" alt="Mines Game Logo" class="logo">
+            <div class="user-info">
+                <span id="username-display">Guest</span>
+                <span id="balance-display">$0.00</span>
+                <button id="logout-btn">Logout</button>
+            </div>
+        </header>
+        
+        <main>
+            <div class="game-container">
+                <div class="game-board" id="game-board"></div>
+                <div class="controls">
+                    <input type="number" id="bet-amount" placeholder="Bet amount" min="1">
+                    <select id="mine-count">
+                        <option value="3">3 Mines</option>
+                        <option value="5">5 Mines</option>
+                        <option value="7">7 Mines</option>
+                    </select>
+                    <button id="start-game">Start Game</button>
+                    <button id="cash-out" disabled>Cash Out</button>
+                </div>
+                <div class="stats">
+                    <div>Multiplier: <span id="multiplier">1.00x</span></div>
+                    <div>Potential Win: <span id="potential-win">$0.00</span></div>
+                </div>
+            </div>
+            <nav>
+                <a href="/" id="home-tab">Home</a>
+                <a href="/admin" id="admin-tab" style="display: none;">Admin</a>
+                <button id="logout-btn">Logout</button>
+            </nav>
+
+        </main>
+    </div>
+    <script src="./assets/js/main.js"></script>
+</body>
+</html>

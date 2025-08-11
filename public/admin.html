@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Mines Game</title>
+    <link rel="stylesheet" href="./assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <div class="admin-container">
+        <header>
+            <h1>Admin Panel</h1>
+            <button id="logout-btn">Logout</button>
+        </header>
+        
+        <div class="admin-nav">
+            <button class="nav-btn active" data-section="users">Users</button>
+            <button class="nav-btn" data-section="games">Games</button>
+            <button class="nav-btn" data-section="logs">Logs</button>
+            <button class="nav-btn" data-section="settings">Settings</button>
+        </div>
+        
+        <div class="admin-content">
+            <!-- Users Section -->
+            <div id="users-section" class="admin-section active">
+                <h2>User Management</h2>
+                <div class="search-bar">
+                    <input type="text" id="user-search" placeholder="Search users...">
+                    <button id="search-users">Search</button>
+                </div>
+                <table id="users-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Username</th>
+                            <th>Balance</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-list">
+                        <!-- Users will be populated here -->
+                    </tbody>
+                </table>
+                <div class="pagination">
+                    <button id="prev-users">Previous</button>
+                    <span id="users-page-info">Page 1 of 1</span>
+                    <button id="next-users">Next</button>
+                </div>
+            </div>
+            
+            <!-- Games Section -->
+            <div id="games-section" class="admin-section">
+                <!-- Will be populated dynamically -->
+            </div>
+            
+            <!-- Logs Section -->
+            <div id="logs-section" class="admin-section">
+                <!-- Will be populated dynamically -->
+            </div>
+            
+            <!-- Settings Section -->
+            <div id="settings-section" class="admin-section">
+                <!-- Will be populated dynamically -->
+            </div>
+        </div>
+    </div>
+    <script src="./assets/js/main.js"></script>
+</body>
+</html>
