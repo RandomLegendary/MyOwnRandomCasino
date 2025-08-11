@@ -412,8 +412,9 @@ async function cashOut() {
                 updateUserDisplay();
             }
 
-            startGameBtn.disabled = false;
-            cashOutBtn.disabled = true;
+            mineCountSelect.disabled = false
+            betAmountInput.disabled = false
+            startGameBtn.disabled = false
             updateUserDisplay();
             gameBoard.innerHTML = '';
         } else {
