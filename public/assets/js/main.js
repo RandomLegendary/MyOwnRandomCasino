@@ -1565,9 +1565,8 @@ function createDailyClaimButton() {
   dailyBtn.style.marginLeft = '10px';
   dailyBtn.disabled = false;
 
-  // Insert button after logout button
-  const logoutBtn = document.getElementById('logout-btn');
-  if (logoutBtn) logoutBtn.insertAdjacentElement('afterend', dailyBtn);
+    const usernameDisplay = document.getElementById('username-display');
+    if (usernameDisplay) usernameDisplay.insertAdjacentElement('beforebegin', dailyBtn);
 
   // Create message span to show status
   const msgSpan = document.createElement('span');
@@ -1577,10 +1576,9 @@ function createDailyClaimButton() {
 
   // Helper to format ms to h:m:s
   function formatMs(ms) {
-    const s = Math.floor(ms / 1000) % 60;
     const m = Math.floor(ms / (1000 * 60)) % 60;
     const h = Math.floor(ms / (1000 * 60 * 60));
-    return `${h}h ${m}m ${s}s`;
+    return `${h}h ${m}m `;
   }
 
   let cooldownTimer = null;
@@ -1606,7 +1604,14 @@ function createDailyClaimButton() {
     dailyBtn.disabled = true;
     msgSpan.textContent = 'Claiming your daily $1000...';
     try {
-      const res = await fetch('/api/claim-daily', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+      const res = await fetch('http://localhost:3000/api/claim-daily', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+        'Content-Type': 'application/json',
+    }
+});
+
       const data = await res.json();
 
       if (data.success) {

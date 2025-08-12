@@ -20,12 +20,12 @@ const errorHandler = require('./middleware/errorHandler');
 const { authenticate, isAdmin } = require('./middleware/auth');
 const { authenticatePage, isAdminPage } = require('./middleware/authPage');
 
-const dailyRoutes = require('./routes/daily');
-app.use('/api', dailyRoutes);
-
 // Initialize app
 const app = express();
 const PORT = process.env.PORT || 3000; 
+
+const dailyRoutes = require('./routes/daily');
+
 
 // Database connection
 const connectDB = require('./config/db');
@@ -81,6 +81,8 @@ app.use(morgan('combined', { stream: accessLogStream }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+app.use('/api', dailyRoutes);
 
 // Static files
 app.use(express.static(path.join(__dirname, '../public')));
