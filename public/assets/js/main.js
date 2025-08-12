@@ -306,6 +306,10 @@ async function startNewGame() {
     } catch (error) {
         console.error('Start game error:', error);
         showError('Network error. Please try again.');
+        mineCountSelect.disabled = false;
+        betAmountInput.disabled = false;
+        startGameBtn.disabled = false;
+
     }
 }
 
