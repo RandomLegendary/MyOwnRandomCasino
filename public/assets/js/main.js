@@ -1604,7 +1604,7 @@ function createDailyClaimButton() {
     dailyBtn.disabled = true;
     msgSpan.textContent = 'Claiming your daily $1000...';
     try {
-      const res = await fetch('http://localhost:3000/api/claim-daily', {
+      const res = await fetch('/api/claim-daily', {
         method: 'POST',
         credentials: 'include',
         headers: {
