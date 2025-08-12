@@ -20,6 +20,9 @@ const errorHandler = require('./middleware/errorHandler');
 const { authenticate, isAdmin } = require('./middleware/auth');
 const { authenticatePage, isAdminPage } = require('./middleware/authPage');
 
+const dailyRoutes = require('./routes/daily');
+app.use('/api', dailyRoutes);
+
 // Initialize app
 const app = express();
 const PORT = process.env.PORT || 3000; 
@@ -33,6 +36,7 @@ const server = http.createServer(app); // Create server here
 // Create WebSocket server
 const WebSocket = require('ws');
 const wss = new WebSocket.Server({ server }); // Now server is defined
+
 
 // WebSocket event handlers
 wss.on('connection', (ws) => {
