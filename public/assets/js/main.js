@@ -1549,3 +1549,101 @@ let currentLogsPage = 1;
 let totalLogsPages = 1;
 let currentSearchQuery = '';
 
+
+
+// Insert this at the end of main.js or wherever you initialize UI event handlers
+
+// Create the button element and insert it next to user info
+function createDailyClaimButton() {
+  const userInfo = document.querySelector('.user-info');
+  if (!userInfo) return;
+
+  // Create button
+  const dailyBtn = document.createElement('button');
+  dailyBtn.id = 'daily-claim-btn';
+  dailyBtn.textContent = 'Claim Daily $1000';
+  dailyBtn.style.marginLeft = '10px';
+  dailyBtn.disabled = false;
+
+  // Insert button after logout button
+  const logoutBtn = document.getElementById('logout-btn');
+  if (logoutBtn) logoutBtn.insertAdjacentElement('afterend', dailyBtn);
+
+  // Create message span to show status
+  const msgSpan = document.createElement('span');
+  msgSpan.id = 'daily-msg';
+  msgSpan.style.marginLeft = '10px';
+  userInfo.appendChild(msgSpan);
+
+  // Helper to format ms to h:m:s
+  function formatMs(ms) {
+    const s = Math.floor(ms / 1000) % 60;
+    const m = Math.floor(ms / (1000 * 60)) % 60;
+    const h = Math.floor(ms / (1000 * 60 * 60));
+    return `${h}h ${m}m ${s}s`;
+  }
+
+  let cooldownTimer = null;
+
+  function startCooldown(ms) {
+    dailyBtn.disabled = true;
+    if (cooldownTimer) clearInterval(cooldownTimer);
+    let remaining = ms;
+    cooldownTimer = setInterval(() => {
+      if (remaining <= 0) {
+        clearInterval(cooldownTimer);
+        dailyBtn.disabled = false;
+        msgSpan.textContent = 'You can claim your daily reward!';
+        return;
+      }
+      msgSpan.textContent = 'Next claim in: ' + formatMs(remaining);
+      remaining -= 1000;
+    }, 1000);
+  }
+
+  // On click, call API
+  dailyBtn.addEventListener('click', async () => {
+    dailyBtn.disabled = true;
+    msgSpan.textContent = 'Claiming your daily $1000...';
+    try {
+      const res = await fetch('/api/claim-daily', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+      const data = await res.json();
+
+      if (data.success) {
+        msgSpan.textContent = `Success! You got $${data.added}.`;
+        // Update balance display
+        const balanceEl = document.getElementById('balance-display');
+        if (balanceEl) balanceEl.textContent = `$${data.balance.toFixed(2)}`;
+        startCooldown(24 * 60 * 60 * 1000);
+      } else if (data.error === 'Cooldown' || data.msLeft) {
+        const msLeft = data.msLeft || (new Date(data.nextAvailable).getTime() - Date.now());
+        startCooldown(msLeft);
+        msgSpan.textContent = `You can claim again at ${new Date(Date.now() + msLeft).toLocaleString()}`;
+      } else {
+        msgSpan.textContent = `Error: ${data.error || 'Unknown error'}`;
+        dailyBtn.disabled = false;
+      }
+    } catch (err) {
+      console.error(err);
+      msgSpan.textContent = 'Network error, try again later.';
+      dailyBtn.disabled = false;
+    }
+  });
+
+  // On page load, check cooldown status from server (optional)
+  async function checkStatus() {
+    try {
+      const res = await fetch('/api/daily-status');
+      if (!res.ok) return;
+      const json = await res.json();
+      if (json.msLeft && json.msLeft > 0) startCooldown(json.msLeft);
+    } catch (e) {
+      // Ignore errors
+    }
+  }
+  checkStatus();
+}
+
+// Initialize the daily claim button on DOM ready
+document.addEventListener('DOMContentLoaded', createDailyClaimButton);
+
