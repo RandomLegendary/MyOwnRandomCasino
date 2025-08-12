@@ -40,23 +40,18 @@ async function checkAuthStatus() {
       credentials: 'include'
     });
     
-    console.log('Auth status response status:', response.status); // Add this
-    
     if (response.ok) {
         const data = await response.json();
-            console.log('Auth status response:', data);
             userData = data.user;
-            console.log('User data:', userData);
             
          updateUserDisplay();
     } else {
-      console.log('Auth failed, status:', response.status); // Add this
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';
       }
     }
   } catch (error) {
-    console.error('Auth check error:', error); // This should show more details
+    console.error('Auth check error:', error);
   }
 }
 
