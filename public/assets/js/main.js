@@ -1342,13 +1342,15 @@ function renderSystemStats(stats = {}) {
     const settingsSection = document.getElementById('settings-section');
     if (!settingsSection) return;
     
-    // Default values if data is missing
+    // Ensure all required fields exist with defaults
     const safeStats = {
         games: {
             totalWon: 0,
             estimatedProfit: 0,
             biggestWin: { amount: 0, username: 'N/A' },
             biggestLoss: { amount: 0, username: 'N/A' },
+            active: 0,
+            completed: 0,
             ...stats.games
         },
         deposits: {
@@ -1371,6 +1373,12 @@ function renderSystemStats(stats = {}) {
         },
         ...stats
     };
+
+    // Safely get amount values
+    const biggestWinAmount = safeStats.games.biggestWin?.amount || 0;
+    const biggestWinUser = safeStats.games.biggestWin?.username || 'Anonymous';
+    const biggestLossAmount = safeStats.games.biggestLoss?.amount || 0;
+    const biggestLossUser = safeStats.games.biggestLoss?.username || 'Anonymous';
 
     settingsSection.innerHTML = `
         <h2>System Statistics</h2>
@@ -1402,14 +1410,14 @@ function renderSystemStats(stats = {}) {
             
             <div class="admin-stat-card">
                 <h3>Biggest Win</h3>
-                <div class="admin-stat-value stat-huge">$${formatLargeNumber(safeStats.games.biggestWin.amount)}</div>
-                <div class="admin-stat-detail">By user ${safeStats.games.biggestWin.username || 'Anonymous'}</div>
+                <div class="admin-stat-value stat-huge">$${formatLargeNumber(biggestWinAmount)}</div>
+                <div class="admin-stat-detail">By user ${biggestWinUser}</div>
             </div>
             
             <div class="admin-stat-card">
                 <h3>Biggest Loss</h3>
-                <div class="admin-stat-value stat-huge">$${formatLargeNumber(safeStats.games.biggestLoss.amount)}</div>
-                <div class="admin-stat-detail">By user ${safeStats.games.biggestLoss.username || 'Anonymous'}</div>
+                <div class="admin-stat-value stat-huge">$${formatLargeNumber(biggestLossAmount)}</div>
+                <div class="admin-stat-detail">By user ${biggestLossUser}</div>
             </div>
         </div>
         
@@ -1422,8 +1430,8 @@ function renderSystemStats(stats = {}) {
             
             <div class="stat-card">
                 <h3>Active Games</h3>
-                <div class="stat-value">${safeStats.games.active || 0}</div>
-                <div class="stat-detail">${safeStats.games.completed || 0} completed</div>
+                <div class="stat-value">${safeStats.games.active}</div>
+                <div class="stat-detail">${safeStats.games.completed} completed</div>
             </div>
         </div>
         
@@ -1431,11 +1439,13 @@ function renderSystemStats(stats = {}) {
         <form id="system-settings-form">
             <div class="form-group">
                 <label>House Edge (%)</label>
-                <input type="number" step="0.1" min="1" max="20" value="${safeStats.settings.houseEdge}" id="house-edge">
+                <input type="number" step="0.1" min="1" max="20" 
+                       value="${safeStats.settings.houseEdge}" id="house-edge">
             </div>
             
             <div class="form-group checkbox">
-                <input type="checkbox" id="maintenance-mode" ${safeStats.settings.maintenanceMode ? 'checked' : ''}>
+                <input type="checkbox" id="maintenance-mode" 
+                       ${safeStats.settings.maintenanceMode ? 'checked' : ''}>
                 <label>Maintenance Mode</label>
             </div>
             
@@ -1452,9 +1462,7 @@ function renderSystemStats(stats = {}) {
         try {
             const response = await fetch('/api/admin/settings', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     houseEdge: parseFloat(document.getElementById('house-edge').value),
                     maintenanceMode: document.getElementById('maintenance-mode').checked
@@ -1462,10 +1470,7 @@ function renderSystemStats(stats = {}) {
                 credentials: 'include'
             });
             
-            if (!response.ok) {
-                throw new Error('Failed to save settings');
-            }
-            
+            if (!response.ok) throw new Error('Failed to save settings');
             showNotification('Settings saved successfully');
         } catch (error) {
             console.error('Error saving settings:', error);
