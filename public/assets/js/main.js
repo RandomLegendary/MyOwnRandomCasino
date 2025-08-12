@@ -1338,49 +1338,92 @@ async function loadSystemStats() {
     }
 }
 
-// Render system stats
-function renderSystemStats(stats) {
+function renderSystemStats(stats = {}) {
     const settingsSection = document.getElementById('settings-section');
     if (!settingsSection) return;
     
+    // Default values if data is missing
+    const safeStats = {
+        games: {
+            totalWon: 0,
+            estimatedProfit: 0,
+            biggestWin: { amount: 0, username: 'N/A' },
+            biggestLoss: { amount: 0, username: 'N/A' },
+            ...stats.games
+        },
+        deposits: {
+            total: 0,
+            ...stats.deposits
+        },
+        withdrawals: {
+            total: 0,
+            ...stats.withdrawals
+        },
+        settings: {
+            houseEdge: 5,
+            maintenanceMode: false,
+            ...stats.settings
+        },
+        users: {
+            total: 0,
+            newToday: 0,
+            ...stats.users
+        },
+        ...stats
+    };
+
     settingsSection.innerHTML = `
         <h2>System Statistics</h2>
         
         <div class="admin-stats-grid">
             <div class="admin-stat-card">
                 <h3>Total Winnings</h3>
-                <div class="admin-stat-value stat-huge">${formatLargeNumber(stats.games.totalWon)}</div>
+                <div class="admin-stat-value stat-huge">$${formatLargeNumber(safeStats.games.totalWon)}</div>
                 <div class="admin-stat-detail">All-time player winnings</div>
             </div>
             
             <div class="admin-stat-card">
                 <h3>Total Deposits</h3>
-                <div class="admin-stat-value stat-huge">${formatLargeNumber(stats.deposits.total)}</div>
+                <div class="admin-stat-value stat-huge">$${formatLargeNumber(safeStats.deposits.total)}</div>
                 <div class="admin-stat-detail">All-time player deposits</div>
             </div>
             
             <div class="admin-stat-card">
                 <h3>Total Withdrawals</h3>
-                <div class="admin-stat-value stat-huge">${formatLargeNumber(stats.withdrawals.total)}</div>
+                <div class="admin-stat-value stat-huge">$${formatLargeNumber(safeStats.withdrawals.total)}</div>
                 <div class="admin-stat-detail">All-time player withdrawals</div>
             </div>
             
             <div class="admin-stat-card">
                 <h3>House Profit</h3>
-                <div class="admin-stat-value stat-huge">${formatLargeNumber(stats.games.estimatedProfit)}</div>
+                <div class="admin-stat-value stat-huge">$${formatLargeNumber(safeStats.games.estimatedProfit)}</div>
                 <div class="admin-stat-detail">Net profit for the house</div>
             </div>
             
             <div class="admin-stat-card">
                 <h3>Biggest Win</h3>
-                <div class="admin-stat-value stat-huge">${formatLargeNumber(stats.games.biggestWin.amount)}</div>
-                <div class="admin-stat-detail">By user ${stats.games.biggestWin.username || 'Anonymous'}</div>
+                <div class="admin-stat-value stat-huge">$${formatLargeNumber(safeStats.games.biggestWin.amount)}</div>
+                <div class="admin-stat-detail">By user ${safeStats.games.biggestWin.username || 'Anonymous'}</div>
             </div>
             
             <div class="admin-stat-card">
                 <h3>Biggest Loss</h3>
-                <div class="admin-stat-value stat-huge">${formatLargeNumber(stats.games.biggestLoss.amount)}</div>
-                <div class="admin-stat-detail">By user ${stats.games.biggestLoss.username || 'Anonymous'}</div>
+                <div class="admin-stat-value stat-huge">$${formatLargeNumber(safeStats.games.biggestLoss.amount)}</div>
+                <div class="admin-stat-detail">By user ${safeStats.games.biggestLoss.username || 'Anonymous'}</div>
+            </div>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Users</h3>
+                <div class="stat-value">${safeStats.users.total}</div>
+                <div class="stat-detail">+${safeStats.users.newToday} today</div>
+            </div>
+            
+            <div class="stat-card">
+                <h3>Active Games</h3>
+                <div class="stat-value">${safeStats.games.active || 0}</div>
+                <div class="stat-detail">${safeStats.games.completed || 0} completed</div>
             </div>
         </div>
         
@@ -1388,11 +1431,11 @@ function renderSystemStats(stats) {
         <form id="system-settings-form">
             <div class="form-group">
                 <label>House Edge (%)</label>
-                <input type="number" step="0.1" min="1" max="20" value="${stats.settings.houseEdge || 5}">
+                <input type="number" step="0.1" min="1" max="20" value="${safeStats.settings.houseEdge}" id="house-edge">
             </div>
             
             <div class="form-group checkbox">
-                <input type="checkbox" id="maintenance-mode" ${stats.settings.maintenanceMode ? 'checked' : ''}>
+                <input type="checkbox" id="maintenance-mode" ${safeStats.settings.maintenanceMode ? 'checked' : ''}>
                 <label>Maintenance Mode</label>
             </div>
             
@@ -1413,7 +1456,7 @@ function renderSystemStats(stats) {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    houseEdge: document.querySelector('#system-settings-form input[type="number"]').value,
+                    houseEdge: parseFloat(document.getElementById('house-edge').value),
                     maintenanceMode: document.getElementById('maintenance-mode').checked
                 }),
                 credentials: 'include'
@@ -1426,18 +1469,19 @@ function renderSystemStats(stats) {
             showNotification('Settings saved successfully');
         } catch (error) {
             console.error('Error saving settings:', error);
-            alert('Failed to save settings. Please try again.');
+            showError('Failed to save settings. Please try again.', 'settings-section');
         }
     });
 }
 
 // Helper function to format large numbers with commas
 function formatLargeNumber(num) {
-    // Convert to number if it's a string
-    const number = typeof num === 'string' ? parseFloat(num) : num;
+    if (typeof num !== 'number') {
+        num = parseFloat(num) || 0;
+    }
     
     // Format with 2 decimal places and commas
-    return number.toLocaleString('en-US', {
+    return num.toLocaleString('en-US', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
     });
