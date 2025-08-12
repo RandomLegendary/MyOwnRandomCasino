@@ -1346,29 +1346,41 @@ function renderSystemStats(stats) {
     settingsSection.innerHTML = `
         <h2>System Statistics</h2>
         
-        <div class="stats-grid">
-            <div class="stat-card">
-                <h3>Users</h3>
-                <div class="stat-value">${stats.users.total}</div>
-                <div class="stat-detail">+${stats.users.newToday} today</div>
+        <div class="admin-stats-grid">
+            <div class="admin-stat-card">
+                <h3>Total Winnings</h3>
+                <div class="admin-stat-value stat-huge">${formatLargeNumber(stats.games.totalWon)}</div>
+                <div class="admin-stat-detail">All-time player winnings</div>
             </div>
             
-            <div class="stat-card">
-                <h3>Games</h3>
-                <div class="stat-value">${stats.games.total}</div>
-                <div class="stat-detail">${stats.games.active} active</div>
+            <div class="admin-stat-card">
+                <h3>Total Deposits</h3>
+                <div class="admin-stat-value stat-huge">${formatLargeNumber(stats.deposits.total)}</div>
+                <div class="admin-stat-detail">All-time player deposits</div>
             </div>
             
-            <div class="stat-card">
-                <h3>Wagered</h3>
-                <div class="stat-value">$${stats.games.totalWagered.toFixed(2)}</div>
-                <div class="stat-detail">$${stats.games.totalWon.toFixed(2)} won</div>
+            <div class="admin-stat-card">
+                <h3>Total Withdrawals</h3>
+                <div class="admin-stat-value stat-huge">${formatLargeNumber(stats.withdrawals.total)}</div>
+                <div class="admin-stat-detail">All-time player withdrawals</div>
             </div>
             
-            <div class="stat-card">
-                <h3>Profit</h3>
-                <div class="stat-value">$${stats.games.estimatedProfit.toFixed(2)}</div>
-                <div class="stat-detail">Estimated</div>
+            <div class="admin-stat-card">
+                <h3>House Profit</h3>
+                <div class="admin-stat-value stat-huge">${formatLargeNumber(stats.games.estimatedProfit)}</div>
+                <div class="admin-stat-detail">Net profit for the house</div>
+            </div>
+            
+            <div class="admin-stat-card">
+                <h3>Biggest Win</h3>
+                <div class="admin-stat-value stat-huge">${formatLargeNumber(stats.games.biggestWin.amount)}</div>
+                <div class="admin-stat-detail">By user ${stats.games.biggestWin.username || 'Anonymous'}</div>
+            </div>
+            
+            <div class="admin-stat-card">
+                <h3>Biggest Loss</h3>
+                <div class="admin-stat-value stat-huge">${formatLargeNumber(stats.games.biggestLoss.amount)}</div>
+                <div class="admin-stat-detail">By user ${stats.games.biggestLoss.username || 'Anonymous'}</div>
             </div>
         </div>
         
@@ -1376,11 +1388,11 @@ function renderSystemStats(stats) {
         <form id="system-settings-form">
             <div class="form-group">
                 <label>House Edge (%)</label>
-                <input type="number" step="0.1" min="1" max="20" value="5">
+                <input type="number" step="0.1" min="1" max="20" value="${stats.settings.houseEdge || 5}">
             </div>
             
             <div class="form-group checkbox">
-                <input type="checkbox" id="maintenance-mode">
+                <input type="checkbox" id="maintenance-mode" ${stats.settings.maintenanceMode ? 'checked' : ''}>
                 <label>Maintenance Mode</label>
             </div>
             
@@ -1395,15 +1407,39 @@ function renderSystemStats(stats) {
         e.preventDefault();
         
         try {
-            // In a real app, you would send these to your backend
-            const maintenanceMode = document.getElementById('maintenance-mode').checked;
+            const response = await fetch('/api/admin/settings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    houseEdge: document.querySelector('#system-settings-form input[type="number"]').value,
+                    maintenanceMode: document.getElementById('maintenance-mode').checked
+                }),
+                credentials: 'include'
+            });
             
-            // Show success message
+            if (!response.ok) {
+                throw new Error('Failed to save settings');
+            }
+            
             showNotification('Settings saved successfully');
         } catch (error) {
             console.error('Error saving settings:', error);
             alert('Failed to save settings. Please try again.');
         }
+    });
+}
+
+// Helper function to format large numbers with commas
+function formatLargeNumber(num) {
+    // Convert to number if it's a string
+    const number = typeof num === 'string' ? parseFloat(num) : num;
+    
+    // Format with 2 decimal places and commas
+    return number.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
     });
 }
 
