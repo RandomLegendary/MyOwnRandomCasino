@@ -26,7 +26,11 @@ const userSchema = new mongoose.Schema({
     balance: {
         type: Number,
         default: 1000,
-        min: 0
+        min: 0,
+    },
+    lastDaily: { 
+        type: Date,
+         default: null
     },
     isAdmin: {
         type: Boolean,
