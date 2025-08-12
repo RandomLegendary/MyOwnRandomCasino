@@ -371,6 +371,8 @@ async function revealCell(row, col) {
             renderGameBoard();
 
             if (currentGame.gameOver) {
+                mineCountSelect.disabled = false;
+                betAmountInput.disabled = false;
                 startGameBtn.disabled = false;
                 cashOutBtn.disabled = true;
                 updateUserDisplay();
