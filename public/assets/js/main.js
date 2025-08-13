@@ -22,6 +22,7 @@ const prevUsersBtn = document.getElementById('prev-users');
 const nextUsersBtn = document.getElementById('next-users');
 const usersPageInfo = document.getElementById('users-page-info');
 
+
 // Game state
 let currentGame = null;
 let userData = null;
@@ -45,6 +46,7 @@ async function checkAuthStatus() {
             userData = data.user;
             
          updateUserDisplay();
+         checkDailyQuestReset();
     } else {
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';
@@ -55,15 +57,83 @@ async function checkAuthStatus() {
   }
 }
 
-
 // Update user display
 function updateUserDisplay() {
     if (userData) {
-        usernameDisplay.textContent = userData.username;
-        balanceDisplay.textContent = `$${userData.balance.toFixed(2)}`;
+        // Update basic user info
+        if (usernameDisplay) usernameDisplay.textContent = userData.username;
+        if (balanceDisplay) balanceDisplay.textContent = `$${userData.balance.toFixed(2)}`;
+        
+        // Update level progression if progress data exists and elements are present
+        if (userData.progress && document.querySelector('.current-level')) {
+            updateLevelProgressionDisplay();
+        }
     } else {
-        usernameDisplay.textContent = 'Guest';
-        balanceDisplay.textContent = '$0.00';
+        if (usernameDisplay) usernameDisplay.textContent = 'Guest';
+        if (balanceDisplay) balanceDisplay.textContent = '$0.00';
+        if (document.querySelector('.current-level')) {
+            resetLevelProgressionDisplay();
+        }
+    }
+}
+
+function updateLevelProgressionDisplay() {
+    const levelData = userData.progress.level;
+    
+    // Safely update elements if they exist
+    const currentLevelEl = document.querySelector('.current-level');
+    const nextLevelEl = document.querySelector('.next-level');
+    const levelFillEl = document.querySelector('.level-fill');
+    const levelTextEl = document.querySelector('.level-text');
+    
+    if (currentLevelEl) currentLevelEl.textContent = `Level ${levelData.current}`;
+    if (nextLevelEl) nextLevelEl.textContent = `Level ${levelData.current + 1}`;
+    
+    // Calculate and update progress bar
+    if (levelFillEl && levelTextEl) {
+        const xpPercentage = (levelData.xp / levelData.nextLevelXp) * 100;
+        levelFillEl.style.width = `${xpPercentage}%`;
+        levelTextEl.textContent = `${levelData.xp}/${levelData.nextLevelXp} XP`;
+    }
+    
+    // Update rewards display
+    updateRewardsDisplay(levelData.current);
+}
+
+function updateRewardsDisplay(currentLevel) {
+    const rewards = document.querySelectorAll('.level-reward p');
+    
+    // Update current reward (showing reward for current level)
+    rewards[0].textContent = getRewardForLevel(currentLevel);
+    
+    // Update next reward (showing reward for next level)
+    rewards[1].textContent = getRewardForLevel(currentLevel + 1);
+}
+
+function getRewardForLevel(level) {
+    // Implement your reward logic here
+    // Example: $1000 for every level
+    return `$1000.00`;
+}
+
+function resetLevelProgressionDisplay() {
+    // Safely reset elements if they exist
+    const currentLevelEl = document.querySelector('.current-level');
+    const nextLevelEl = document.querySelector('.next-level');
+    const levelFillEl = document.querySelector('.level-fill');
+    const levelTextEl = document.querySelector('.level-text');
+    
+    if (currentLevelEl) currentLevelEl.textContent = 'Level 0';
+    if (nextLevelEl) nextLevelEl.textContent = 'Level 1';
+    if (levelFillEl) levelFillEl.style.width = '0%';
+    if (levelTextEl) levelTextEl.textContent = '0/500 XP';
+    
+    const rewards = document.querySelectorAll('.level-reward p');
+    if (rewards.length > 0) {
+        rewards[0].textContent = '$1000.00 Starting Balance';
+        if (rewards.length > 1) {
+            rewards[1].textContent = '$1000.00';
+        }
     }
 }
 
@@ -260,6 +330,13 @@ function sanitizeGameData(gameData) {
 // Start new game
 async function startNewGame() {
     const betAmount = parseFloat(betAmountInput.value);
+
+    const amountForQuestBet = 1000;
+
+    if (betAmount >= amountForQuestBet) {
+         updateQuestProgress(2, 1);
+    }
+
     const mineCount = parseInt(mineCountSelect.value);
 
 
@@ -306,6 +383,9 @@ async function startNewGame() {
             cashOutBtn.disabled = false;
             renderGameBoard();
             updateUserDisplay();
+            
+            updateQuestProgress(1, 1);
+
         } else {
             mineCountSelect.disabled = false;
             betAmountInput.disabled = false;
@@ -378,6 +458,13 @@ async function revealCell(row, col) {
         if (response.ok) {
             currentGame = sanitizeGameData(data);
 
+            // Check if the revealed cell was a mine
+            if (data.cellRevealed && data.cellRevealed.isMine) {
+                //Nothing
+            } else {
+                updateQuestProgress(4, 1);
+            }
+
             if (typeof data.balance === 'number') {
                 userData.balance = data.balance;
                 updateUserDisplay();
@@ -391,6 +478,11 @@ async function revealCell(row, col) {
                 startGameBtn.disabled = false;
                 cashOutBtn.disabled = true;
                 updateUserDisplay();
+                
+                // You might want to add specific handling for game over
+                if (data.gameOverDueToMine) {
+                    console.log("Game over - you hit a mine!");
+                }
             }
         } else {
             showError(data.error || 'Failed to reveal cell');
@@ -400,7 +492,6 @@ async function revealCell(row, col) {
         showError('Network error. Please try again.');
     }
 }
-
 
 // Cash out
 async function cashOut() {
@@ -419,14 +510,21 @@ async function cashOut() {
         if (response.ok) {
             currentGame = null;
 
-             if (typeof data.balance === 'number') {
+            if (typeof data.balance === 'number') {
                 userData.balance = data.balance;
                 updateUserDisplay();
+
+
+                updateUserXp(1);
+
+                if (data.winAmount > 2000) {
+                     updateQuestProgress(3, 1);
+                }
             }
 
-            mineCountSelect.disabled = false
-            betAmountInput.disabled = false
-            startGameBtn.disabled = false
+            mineCountSelect.disabled = false;
+            betAmountInput.disabled = false;
+            startGameBtn.disabled = false;
             updateUserDisplay();
             gameBoard.innerHTML = '';
         } else {
@@ -437,7 +535,6 @@ async function cashOut() {
         showError('Network error. Please try again.');
     }
 }
-
 // Update multiplier and potential win display
 function updateGameDisplay() {
     if (!currentGame) return;
@@ -457,10 +554,6 @@ function getCookie(name) {
     const parts = value.split(`; ${name}=`);
     if (parts.length === 2) return parts.pop().split(';').shift();
 }
-
-
-
-
 
 
 
@@ -1663,3 +1756,210 @@ function createDailyClaimButton() {
 // Initialize the daily claim button on DOM ready
 document.addEventListener('DOMContentLoaded', createDailyClaimButton);
 
+
+// Elements (only if page has them)
+let dailyProgressBar = document.querySelector('.progress-fill');
+let rewardItems = Array.from(document.querySelectorAll('.reward-item'));
+let descriptionElements = Array.from(document.querySelectorAll('[id^="description-progress"]'));
+
+// Update the UI based on quest data
+function updateQuestDisplay(quests) {
+    quests.forEach((quest, i) => {
+        // Update description if element exists
+        if (descriptionElements[i]) {
+            descriptionElements[i].textContent = `${quest.description} (${quest.current}/${quest.goal})`;
+        }
+        // Update reward item if element exists
+        if (rewardItems[i]) {
+            rewardItems[i].classList.toggle('completed', quest.completed);
+        }
+    });
+
+    // Update progress bar and text if they exist
+    if (dailyProgressBar) {
+        const completedCount = quests.filter(q => q.completed).length;
+        const percentage = (completedCount / quests.length) * 100;
+        dailyProgressBar.style.width = `${percentage}%`;
+
+        const progressText = document.querySelector('.progress-text');
+        if (progressText) {
+            progressText.textContent = `${completedCount}/${quests.length} challenges completed`;
+        }
+    }
+}
+
+
+// Fetch quests from server and update UI
+async function checkDailyQuestReset() {
+    try {
+        const res = await fetch('/api/quests/reset-if-needed', {
+            method: 'POST',
+            credentials: 'include'
+        });
+        const questData = await res.json();
+
+        if (questData.quests) {
+            updateQuestDisplay(questData.quests);
+        }
+    } catch (err) {
+        console.error('Error checking daily quests:', err);
+    }
+}
+
+// Initialize after DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    dailyProgressBar = document.querySelector('.progress-fill');
+    rewardItems = [
+        document.getElementById('reward-item-1'),
+        document.getElementById('reward-item-2'),
+        document.getElementById('reward-item-3'),
+        document.getElementById('reward-item-4')
+    ];
+    descriptionElements = [
+        document.getElementById('description-progress-one'),
+        document.getElementById('description-progress-two'),
+        document.getElementById('description-progress-three'),
+        document.getElementById('description-progress-four')
+    ];
+
+    // Immediately fetch and update quests
+    checkDailyQuestReset();
+});
+
+
+// Fetch latest quests from server
+async function fetchQuests() {
+    try {
+        const res = await fetch('/api/quests/reset-if-needed', { method: 'POST', credentials: 'include' });
+        const data = await res.json();
+        if (data.quests) updateQuestDisplay(data.quests);
+    } catch (err) {
+        console.error('Error fetching quests:', err);
+    }
+}
+
+// Update quest progress on server
+async function updateQuestProgress(questId, increment = 1) {
+    try {
+        const res = await fetch('/api/quests/update-progress', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ questId, increment })
+        });
+        const data = await res.json();
+        
+        if (data.quests) {
+            updateQuestDisplay(data.quests);
+            
+            // Check if any quest was just completed
+            const completedQuest = data.quests.find(q => q.id === questId && q.completed && q.current === q.goal);
+            if (completedQuest) {
+                handleQuestCompletion(completedQuest);
+            }
+        }
+
+        if (data.balance !== undefined) {
+            const balanceElem = document.querySelector('.balance');
+            if (balanceElem) balanceElem.textContent = `$${data.balance}`;
+        }
+    } catch (err) {
+        console.error('Error updating quest progress:', err);
+    }
+}
+
+
+
+async function updateUserXp(xpToAdd) {
+    try {
+        const response = await fetch('/api/user/add-xp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ xp: xpToAdd })
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to update XP');
+        }
+
+        const data = await response.json();
+        
+        if (data) {
+            // Update local user data with the returned values
+            userData = {
+                ...userData,
+                balance: data.user.balance,
+                progress: data.user.progress
+            };
+            
+            updateUserDisplay();
+
+        }
+    } catch (error) {
+        console.error('Error updating XP:', error);
+        return false;
+    }
+}
+
+
+function handleQuestCompletion(quest) {
+    // Show a notification or animation
+    showNotification(`Quest completed: ${quest.description}! Reward: $${quest.reward || 100}`);
+    
+    // You could also trigger a visual effect
+    const rewardItem = document.querySelector(`.reward-item[data-quest-id="${quest.id}"]`);
+    if (rewardItem) {
+        rewardItem.classList.add('just-completed');
+        setTimeout(() => rewardItem.classList.remove('just-completed'), 2000);
+    }
+    
+    updateUserXp(50);
+    
+}
+
+
+// Updated helper function to determine level rewards
+function getLevelReward(level) {
+    // Calculate money reward - increases by 1000 each level
+    const moneyReward = 1000 + (500 * (level - 1));
+    
+    // Calculate XP reward - increases by 500 each level
+    const xpReward = 500 + (500 * (level - 1));
+    
+    return `${moneyReward}$ + ${xpReward} XP`;
+}
+
+// Updated function to handle level up rewards
+async function handleLevelUp(newLevel) {
+    if (!userData) return;
+    
+    // Calculate rewards based on level
+    const moneyReward = 1000 + (1000 * (newLevel - 1));
+    const xpReward = 500 + (500 * (newLevel - 1));
+    
+    try {
+        // Call API to grant rewards
+        const response = await fetch('/api/user/level-up', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                level: newLevel,
+                moneyReward: moneyReward,
+                xpReward: xpReward 
+            }),
+            credentials: 'include'
+        });
+
+        const data = await response.json();
+        
+        if (response.ok) {
+            userData = data.user;
+            updateUserDisplay();
+        }
+    } catch (error) {
+        console.error('Level up error:', error);
+    }
+}
+// Call this on page load
+document.addEventListener('DOMContentLoaded', fetchQuests);

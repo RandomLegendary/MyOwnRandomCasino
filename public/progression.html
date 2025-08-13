@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mines Gambling Game - Progress System</title>
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <img src="./assets/images/logo.png" alt="Mines Game Logo" class="logo">
+            <div class="user-info">
+                <span id="username-display">Guest</span>
+                <span id="balance-display">$0.00</span>
+                <button id="logout-btn">Logout</button>
+            </div>
+                <a href="/index.html" class="progress-btn">
+                    <span class="progress-icon">📊</span>
+                    Back to the game
+                </a>
+        </header>
+        
+        <main>
+            <!-- Progress System Section -->
+            <section class="progress-section">
+                <h2>Your Progress</h2>
+                
+                <!-- Daily Progress -->
+                <div class="progress-card">
+                    <h3>Daily Challenges</h3>
+                    <div class="progress-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 25%"></div>
+                        </div>
+                        <span class="progress-text">1/4 challenges completed</span>
+                    </div>
+                    <div class="progress-rewards">
+                        <div class="reward-item completed" id="reward-item-1">
+                            <span class="reward-icon">💰</span>
+                            <span class="reward-amount">$200</span>
+                            <p id="description-progress-one"></p>
+                        </div>
+                        <div class="reward-item" id="reward-item-2">
+                            <span class="reward-icon">💎</span>
+                            <span class="reward-amount">$200</span>
+                            <p id="description-progress-two"></p>
+                        </div>
+                        <div class="reward-item" id="reward-item-3">
+                            <span class="reward-icon">🏆</span>
+                            <span class="reward-amount">$200</span>
+                            <p id="description-progress-three"></p>
+                        </div>
+                        <div class="reward-item" id="reward-item-4">
+                            <span class="reward-icon">👑</span>
+                            <span class="reward-amount">$200</span>
+                            <p id="description-progress-four"></p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Level Progression -->
+                <div class="progress-card">
+                    <h3>Player Level</h3>
+                    <div class="level-container">
+                        <div class="level-display">
+                            <span class="current-level">Level 0</span>
+                            <div class="level-progress">
+                                <div class="level-bar">
+                                    <div class="level-fill" style="width: 0%"></div>
+                                </div>
+                                <span class="level-text">0/500 XP</span>
+                            </div>
+                            <span class="next-level">Level 1</span>
+                        </div>
+                        <div class="level-rewards">
+                            <div class="level-reward">
+                                <span class="reward-badge">Current</span>
+                                <p>1000$ Starting Balance</p>
+                            </div>
+                            <div class="level-reward">
+                                <span class="reward-badge">Next</span>
+                                <p>1000$</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="./assets/js/main.js"></script>
+</body>
+</html>

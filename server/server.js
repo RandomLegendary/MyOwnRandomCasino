@@ -92,6 +92,14 @@ app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/game', gameRoutes);
 
+const usersRoutes = require('./routes/userRoutes');
+app.use('/api/user', usersRoutes);
+
+const questsRoutes = require('./routes/questRoutes');
+app.use('/api/quests', questsRoutes);
+
+
+
 //Protect Admin
 app.get('/admin', authenticate, isAdmin, (req, res) => {
     res.sendFile(path.join(__dirname, '../public/admin.html'));
