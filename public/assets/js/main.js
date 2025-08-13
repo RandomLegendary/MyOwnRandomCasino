@@ -23,7 +23,7 @@ const nextUsersBtn = document.getElementById('next-users');
 const usersPageInfo = document.getElementById('users-page-info');
 
 // Game state
-let currentGame = null;  // null when no game in progress
+let currentGame = null;
 let userData = null;
 let socket = null;
 
@@ -270,11 +270,17 @@ async function startNewGame() {
 
     if (!betAmount || betAmount <= 0) {
         showError('Please enter a valid bet amount');
+        mineCountSelect.disabled = false;
+        betAmountInput.disabled = false;
+        startGameBtn.disabled = false;
         return;
     }
     
     if (!userData || userData.balance < betAmount) {
         showError('Insufficient balance');
+        mineCountSelect.disabled = false;
+        betAmountInput.disabled = false;
+        startGameBtn.disabled = false;
         return;
     }
     
@@ -301,14 +307,19 @@ async function startNewGame() {
             renderGameBoard();
             updateUserDisplay();
         } else {
+            mineCountSelect.disabled = false;
+            betAmountInput.disabled = false;
+            startGameBtn.disabled = false;
             showError(data.error || 'Failed to start game');
         }
     } catch (error) {
-        console.error('Start game error:', error);
-        showError('Network error. Please try again.');
         mineCountSelect.disabled = false;
         betAmountInput.disabled = false;
         startGameBtn.disabled = false;
+
+        console.error('Start game error:', error);
+        showError('Network error. Please try again.');
+
 
     }
 }
